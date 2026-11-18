@@ -1,0 +1,30 @@
+# Side assistant
+
+A Chinese-speaking helper that lives in a session's right sidebar. It does not do the work itself: it clears up the request, then hands it to the main session.
+
+## What it adds
+
+- **A `side-assistant` session preset**: pick it when starting a session. The preset has no shell and no file tools.
+- **Three tools**, registered only for sessions running that preset:
+
+  | Tool | Purpose |
+  |---|---|
+  | `side_sessions` | List the other sessions of this workspace, their state, and which one is the main session |
+  | `side_peek` | Read a session's recent thread: prompts, answers, tool calls, and how each turn ended |
+  | `side_deliver` | Deliver the drafted request to the main session and wake it; the target shows "from session …" |
+
+- **A right-sidebar panel**: press **侧边助理** in any session header to open the assistant's chat beside it.
+
+## Usage
+
+1. Open a session and press **侧边助理** in its header.
+2. Describe what you need in plain Chinese; it narrows the goal and constraints first.
+3. Say "发给主会话" and it delivers the drafted request.
+4. Say "跟进一下" and it reports the main session's progress: conclusion first, then what is verified, what is blocked, and anything needing your decision.
+
+## Design notes
+
+- The assistant is a real Session; the panel is only one view of it, so closing the panel keeps the conversation.
+- Delivery uses `agent.followup`, so only a live session can be woken; a stopped one reports an error instead of pretending.
+- The plugin is a profile-level row and registers its tools per Agent through `agent/created`, so ordinary sessions never see them.
+- The plugin imports no `@deepseek-ai/*` package: tool schemas are assembled locally.

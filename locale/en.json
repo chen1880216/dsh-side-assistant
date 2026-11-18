@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Side assistant",
+    "description": "Adds a \"side assistant\" session mode: clarify a request in Chinese, relay it to the main session, and follow its progress.",
+    "detail": "detail/en.md"
+  }
+}

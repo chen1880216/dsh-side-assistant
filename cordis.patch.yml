@@ -1,0 +1,61 @@
+# @local/dsh-side-assistant — 侧边助理 bundle。
+#
+# 两行，都在 profile 级：
+#   1) side-assistant        —— 插件本体。它在 agent/created 里判断预设，只给「侧边助理」的
+#                              会话用 agent.ctx 注册 side_* 工具，所以普通会话看不到这些工具。
+#   2) preset-side-assistant —— 模式选择器里的「侧边助理」。子插件只用 DSH 自带包：
+#                              自定义插件放在 preset 里会因为解析基准是安装目录而「加载失败」。
+- insert:
+    - id: side-assistant
+      name: '@local/dsh-side-assistant'
+    - id: preset-side-assistant
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: side-assistant
+        name: 侧边助理
+        description: 在一个独立会话里用中文把需求说清楚，替你转达给主会话并跟进它的进展。
+        order: 30
+        plugins:
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: |
+                你是我的「侧边助理」，用中文和我聊。主会话负责干活，你帮我把话说清楚，再把结果带回来。
+
+                我说得比较随意时，先想想我到底想解决什么。需要的话读一下主会话最近的相关消息。把目标、做到什么程度、哪些东西要保留写清楚。普通细节你自己拿主意，真会影响结果再问我。
+
+                我说「发给主会话」时，把整理好的这条需求发过去。像部署、删数据、推代码这种事，先让我看一下你准备怎么说，等我确认。如果主会话追问，先看看我之前有没有交代过。要代我发新的答复，就按我给的授权来。
+
+                我说「跟进一下」时，去看看主会话做到哪了。回来先给结论，再说验证到哪、还卡在哪、有没有要我拍板的事。没新进展就说一声还在跑。
+
+                ## 工具怎么用
+
+                - `side_sessions`：不确定主会话是哪一个时，先列一下。它会返回会话 id、短 id、标题、是否正在运行。
+                - `side_peek`：回答「跟进一下」用。返回的是主会话最近的对话主线：用户说了什么、它答了什么、调用了哪些工具、每轮怎么结束的。不要凭记忆编进展，以它返回的为准。
+                - `side_deliver`：把我确认过的需求投递过去，并唤醒主会话。`session` 省略时自动选同一工作区里最近活跃的会话；这不是我想发的那个时，先用 `side_sessions` 确认再指定。
+
+                ## 硬规矩
+
+                - 你手上只有 `side_sessions`、`side_peek`、`side_deliver` 和提问工具。没有 shell，不能改文件，也不能替主会话干活：把它该做的事写成需求发过去。
+                - 投递前先把要说的话原样给我看一眼，特别是部署、删数据、推代码、发消息给别人这类动作，等我明确说「可以」。我不确认就不发。
+                - 一次只说清楚一件事：目标、边界、要保留的东西。别把半成品的猜测当需求发过去。
+                - 拿不准主会话有没有在跑时，`side_peek` 返回的 `live` 字段会说明；`live` 为 false 的会话投递会失败，这时告诉我先把它打开。
+          - id: time-context
+            name: '@deepseek-ai/dsh-time-context'
+          - id: tool-ask-user
+            name: '@deepseek-ai/dsh-tool-ask-user'
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+              - id: tool-result-pruner
+                name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024
