@@ -24,6 +24,8 @@ A Chinese-speaking helper that lives in a session's right sidebar. It does not d
 
 **The default target is the session you opened the panel from.** The header entry records that pair in the browser and pushes it to a small binding table on the host, so `side_peek` / `side_deliver` aim there unless you name a `session` explicitly.
 
+**Clear chat**: the button in the panel's top row turns into "Clear?" on the first click; the second click moves the panel to a fresh blank conversation and repoints the binding. The old conversation is not deleted — DSH has no session-delete API — so it stays in your session list.
+
 ## Design notes
 
 - The assistant is a real Session; the panel is only one view of it, so closing the panel keeps the conversation.

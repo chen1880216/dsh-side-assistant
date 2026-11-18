@@ -63,6 +63,11 @@ title fragment) to aim somewhere else.
 For risky actions (deploy, delete data, push code) it shows you the wording it is about to send and waits
 for your confirmation.
 
+The panel's top row has a **Clear chat** button: the first click turns it into "Clear?", the second click
+moves the panel to a fresh blank conversation (same main session, same workspace, binding carried over).
+The previous conversation stays in your session list — DSH has no API to delete a session, so "clear"
+means "start a new pot of tea", not "smash the pot".
+
 ## The three tools
 
 ```jsonc
@@ -139,6 +144,11 @@ system temp directory (or point it at an explicit file path). Nothing is written
   on its own. Ask the assistant again to follow up.
 - The panel reuses the official `sidebar.chat.conversation` seat; if upstream changes that seat's shape,
   this plugin has to follow.
+- "Clear chat" swaps sessions; it does not delete history. The client sessions contract has no clear or
+  delete method and the host exposes no matching remote endpoint, so the button creates a fresh blank
+  assistant session in the same workspace, repoints the "origin → assistant" binding at it, and replaces
+  the current tab in place via `openResource(..., { replaceTab })`. The previous session stays in your
+  session list.
 - The tab title is fixed to 「侧边助理」; custom titles/icons are not supported yet.
 
 ## Community
