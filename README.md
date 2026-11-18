@@ -108,6 +108,11 @@ DSH 目前没有删除会话的 API，所以"清空"等于"换一壶新茶"，�
   立刻 inactive（报 `cannot get required service "sessionQuery" in inactive context`）。
   所以工具注册时先把服务对象抓出来，执行时优先用 `exec.agent.ctx` 现场解析，
   再回退到抓下来的那份；同时 `apply` 末尾会扫一遍已存在的 agent 补注册工具。
+- **面板打开期间不显示左侧的绿点。** DSH 只给"没有被 `mainView` 持有的会话"加
+  `completionUnread`（绿点 = 跑完但没看过的提醒）。插件在标签打开期间额外按
+  `mainView` 持有一次这个会话，绿点就不会出现；标签关掉后释放。
+  代价：这段时间"当前会话"的判定里多了一个候选，实际查找按列表顺序取第一个，
+  仍是主列那个会话，所以通常看不出差别。
 
 ## 开发
 

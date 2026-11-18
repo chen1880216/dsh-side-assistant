@@ -117,6 +117,11 @@ means "start a new pot of tea", not "smash the pot".
   so a captured `ctx` turns inactive (`cannot get required service "sessionQuery" in inactive context`).
   The plugin therefore captures the service objects at registration time, resolves them again through
   `exec.agent.ctx` at call time, and rescans existing agents in `apply` to re-register their tools.
+- **No green dot while the panel is open.** DSH marks a Session `completionUnread`
+  (the green "finished, not looked at" dot) only when nothing retains it as `mainView`.
+  The plugin holds one extra `mainView` retention while the tab is open and releases it when
+  the tab closes. Cost: one more candidate in "which Session is current" lookups, which take
+  the first retained Session in list order — normally still the main-column Session.
 
 ## Development
 
