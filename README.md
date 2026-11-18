@@ -1,3 +1,5 @@
+**中文** | [English](README.en.md)
+
 # dsh-side-assistant · 侧边助理
 
 给 [DeepSeek Harness](https://github.com/deepseek-ai)（DSH）加一个**侧边栏里的中文助理**：
