@@ -42,6 +42,14 @@
   "engines": {
     "node": ">=22"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chen1880216/dsh-side-assistant.git"
+  },
+  "homepage": "https://github.com/chen1880216/dsh-side-assistant#readme",
+  "bugs": {
+    "url": "https://github.com/chen1880216/dsh-side-assistant/issues"
+  },
   "license": "MIT",
   "keywords": [
     "dsh",
