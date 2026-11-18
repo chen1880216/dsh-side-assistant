@@ -2,6 +2,8 @@
 
 # dsh-side-assistant
 
+![The main session with the assistant docked in the right sidebar](assets/overview.jpg)
+
 A **Chinese-speaking assistant in the right sidebar** for [DeepSeek Harness](https://github.com/deepseek-ai) (DSH).
 
 The main session does the work. This assistant does the part humans usually need: it takes a vague request,
@@ -14,6 +16,8 @@ and later comes back and tells you how far the main session got.
 - Click it → a tab opens in the right sidebar with the assistant's own session, ready to chat;
 - The assistant joins the **workspace** the current session belongs to (no "pick a workspace" dialog);
 - Clicking again just brings the existing panel forward instead of creating new sessions.
+
+![The assistant panel in the right sidebar](assets/sidebar-panel.png)
 
 ## What it installs
 
