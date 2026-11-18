@@ -117,11 +117,14 @@ means "start a new pot of tea", not "smash the pot".
   so a captured `ctx` turns inactive (`cannot get required service "sessionQuery" in inactive context`).
   The plugin therefore captures the service objects at registration time, resolves them again through
   `exec.agent.ctx` at call time, and rescans existing agents in `apply` to re-register their tools.
-- **No green dot while the panel is open.** DSH marks a Session `completionUnread`
-  (the green "finished, not looked at" dot) only when nothing retains it as `mainView`.
-  The plugin holds one extra `mainView` retention while the tab is open and releases it when
-  the tab closes. Cost: one more candidate in "which Session is current" lookups, which take
-  the first retained Session in list order — normally still the main-column Session.
+- **No green dot on the assistant's Session.** The dot is DSH's `completionUnread` marker
+  for a Session that finished while nothing retained it as `mainView`. The first version
+  suppressed it by holding an extra `mainView` retention, which added a second candidate to
+  "which Session is current" lookups and pinned the main column to the panel Session, so other
+  history Sessions could not be opened. The dot is now hidden by row instead: the plugin injects
+  a stylesheet that hides `[data-state="done"]` only inside
+  `[data-row-key="session:<id>"]` rows of panel Sessions, leaving retain semantics untouched.
+  Cost: the selector rides on DOM attributes, so a DSH row-attribute change needs a follow-up.
 
 ## Development
 
@@ -163,3 +166,4 @@ This open-source project is linked to and endorses the [LINUX DO](https://linux.
 ## License
 
 MIT
+

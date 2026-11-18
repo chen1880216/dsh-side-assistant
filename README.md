@@ -108,11 +108,12 @@ DSH 目前没有删除会话的 API，所以"清空"等于"换一壶新茶"，�
   立刻 inactive（报 `cannot get required service "sessionQuery" in inactive context`）。
   所以工具注册时先把服务对象抓出来，执行时优先用 `exec.agent.ctx` 现场解析，
   再回退到抓下来的那份；同时 `apply` 末尾会扫一遍已存在的 agent 补注册工具。
-- **面板打开期间不显示左侧的绿点。** DSH 只给"没有被 `mainView` 持有的会话"加
-  `completionUnread`（绿点 = 跑完但没看过的提醒）。插件在标签打开期间额外按
-  `mainView` 持有一次这个会话，绿点就不会出现；标签关掉后释放。
-  代价：这段时间"当前会话"的判定里多了一个候选，实际查找按列表顺序取第一个，
-  仍是主列那个会话，所以通常看不出差别。
+- **侧边助理的会话不显示左侧绿点。** 绿点是 DSH 给"跑完但没被 `mainView` 持有"的会话
+  打的 `completionUnread` 提醒。第一版用"额外按 `mainView` 持有面板会话"来消它，
+  结果"哪个会话是当前会话"的判定多了一个候选，主列被钉在面板会话上、点别的历史会话切不动。
+  现在改成按行隐藏：插件插入一段样式，只对面板会话的行
+  （`[data-row-key="session:<id>"] [data-state="done"]`）关掉绿点，不动任何 retain 语义。
+  代价：这是对着 DOM 属性写的选择器，DSH 若改掉行属性需要跟着改。
 
 ## 开发
 
@@ -152,3 +153,4 @@ $env:ELECTRON_RUN_AS_NODE = '1'
 ## 许可
 
 MIT
+
