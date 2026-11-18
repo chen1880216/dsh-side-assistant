@@ -126,6 +126,10 @@ system temp directory (or point it at an explicit file path). Nothing is written
   this plugin has to follow.
 - The tab title is fixed to 「侧边助理」; custom titles/icons are not supported yet.
 
+## Community
+
+This open-source project is linked to and endorses the [LINUX DO](https://linux.do) community.
+
 ## License
 
 MIT

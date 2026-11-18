@@ -118,6 +118,10 @@ $env:ELECTRON_RUN_AS_NODE = '1'
 - 面板复用官方 `sidebar.chat.conversation` 座位；如果官方改了座位形状，这里要跟着改。
 - 标签页标题固定显示「侧边助理」，暂不支持自定义标题/图标。
 
+## 社区
+
+本开源项目已链接并认可 [LINUX DO](https://linux.do) 社区。
+
 ## 许可
 
 MIT
