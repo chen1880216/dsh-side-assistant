@@ -25,10 +25,11 @@
 |---|---|---|
 | `side-assistant` 插件行 | profile 级 | 监听 `agent/created`，只在「侧边助理」预设的会话里注册工具 |
 | `preset-side-assistant` | 模式选择器 | 预设「侧边助理」：persona + 时间上下文 + 提问工具 + 上下文压缩 |
-| `side_sessions` | 工具 | 列出其它会话（哪个像主会话、是否在跑） |
+| `side_sessions` | 工具 | 列出其它会话（哪个像主会话、是否在跑，`bound: true` 标出你从哪打开的） |
 | `side_peek` | 工具 | 读某个会话最近的对话主线（说了什么、调了哪些工具、每轮怎么结束） |
 | `side_deliver` | 工具 | 把整理好的需求投递给主会话并唤醒它 |
 | `lib/client.js` | 客户端 | 右侧栏面板：资源协议 `sideassistant` + 标签类型 + 会话头部入口按钮 |
+| `/api/dsh-side-assistant/bind` | Host 路由 | 面板打开时告诉宿主"我是从哪个会话点开的"，工具默认就操作那个会话 |
 
 **没有 shell、没有文件工具。** 助理只能"说清楚"，不能自己动手改东西——这正是它的边界：
 让它只动嘴，你就不用担心它在背后改你的文件。
@@ -52,6 +53,10 @@
 4. 你说「**发给主会话**」→ 它调 `side_deliver`，主会话收到一条「来自会话 xxxx」的消息并开始干活；
 5. 你说「**跟进一下**」→ 它调 `side_peek` 读主会话进展，先给结论，再说验证到哪、卡在哪。
 
+**默认目标就是"你从哪个会话点开的那个"**：点按钮时面板会把"来源会话 → 助理会话"记到浏览器本地，
+并 POST 给宿主一张绑定表；`side_peek` / `side_deliver` 不带 `session` 参数时直接操作它。
+想换目标就显式传 `session`（id、id 前缀或标题片段都行）。
+
 涉及部署、删数据、推代码这类动作时，它会先把"准备怎么说"拿给你看，等你确认再发。
 
 ## 三个工具
@@ -60,11 +65,11 @@
 // side_sessions —— 列出可投递的会话
 { "limit": 10 }
 
-// side_peek —— 读某个会话最近的进展
-{ "sessionId": "session-xxxx", "limit": 30 }
+// side_peek —— 读某个会话最近的进展（不传 session 就是绑定的主会话）
+{ "session": "session-xxxx 或 id 前缀或标题片段", "limit": 30 }
 
 // side_deliver —— 把需求投递过去（只对 live 会话有效）
-{ "sessionId": "session-xxxx", "message": "把导出的字段顺序改成…", "reason": "用户确认过" }
+{ "text": "把导出的字段顺序改成…", "note": "侧边助理转达：…", "session": "可选" }
 ```
 
 ## 设计取舍
@@ -90,6 +95,15 @@
 - **在会话所属工作区里建助理会话。** `sessions.create` 不带 `cwd` 会落到 host 默认目录，
   面板就会显示"选工作区"并把主列切走；所以先用当前会话找到它所属的 workspace，
   再 `connectWorkspace(workspaceId, { agentPreset })` 建会话，最后 `openResource` 打开标签。
+- **"从哪打开的"靠自己的路由带过去。** 浏览器 `sessions.create` 只接受
+  `{ workspaceId, cwd, sessionId, agentPreset }`，宿主 `ApiSessionCreateRequest` 也只读
+  `cwd`/`agentPreset`，`parentSession` 送不过去。于是插件自己注册一条
+  `POST /api/dsh-side-assistant/bind`，面板每次打开都推一次"助理会话 → 来源会话"，
+  工具执行时按自己的会话 id 查表；浏览器本地另存一份，插件重载后重新绑定。
+- **工具在插件重载后不失效。** profile 里 disable→enable 会销毁旧 fiber ctx，闭包里的 `ctx`
+  立刻 inactive（报 `cannot get required service "sessionQuery" in inactive context`）。
+  所以工具注册时先把服务对象抓出来，执行时优先用 `exec.agent.ctx` 现场解析，
+  再回退到抓下来的那份；同时 `apply` 末尾会扫一遍已存在的 agent 补注册工具。
 
 ## 开发
 

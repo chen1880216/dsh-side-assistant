@@ -22,9 +22,13 @@ A Chinese-speaking helper that lives in a session's right sidebar. It does not d
 3. Say "发给主会话" and it delivers the drafted request.
 4. Say "跟进一下" and it reports the main session's progress: conclusion first, then what is verified, what is blocked, and anything needing your decision.
 
+**The default target is the session you opened the panel from.** The header entry records that pair in the browser and pushes it to a small binding table on the host, so `side_peek` / `side_deliver` aim there unless you name a `session` explicitly.
+
 ## Design notes
 
 - The assistant is a real Session; the panel is only one view of it, so closing the panel keeps the conversation.
 - Delivery uses `agent.followup`, so only a live session can be woken; a stopped one reports an error instead of pretending.
 - The plugin is a profile-level row and registers its tools per Agent through `agent/created`, so ordinary sessions never see them.
 - The plugin imports no `@deepseek-ai/*` package: tool schemas are assembled locally.
+- The origin session travels over `POST /api/dsh-side-assistant/bind`, because `sessions.create` cannot carry it.
+- Tools re-resolve their services through `exec.agent.ctx`, so they keep working after the plugin reloads.

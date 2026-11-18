@@ -25,10 +25,11 @@ and later comes back and tells you how far the main session got.
 |---|---|---|
 | `side-assistant` plugin row | profile | Listens to `agent/created`, registers tools only for sessions running the assistant preset |
 | `preset-side-assistant` | preset roster | The 「侧边助理」 preset: persona + time context + ask-user + compaction |
-| `side_sessions` | tool | List other sessions (which one looks like the main session, whether it is running) |
+| `side_sessions` | tool | List other sessions (which one looks like the main session, whether it is running; `bound: true` marks the one you opened the panel from) |
 | `side_peek` | tool | Read the recent timeline of a session (what was said, which tools ran, how each turn ended) |
 | `side_deliver` | tool | Hand a written-up requirement to the main session and wake it up |
 | `lib/client.js` | client | Right sidebar panel: `sideassistant` resource protocol + tab type + header entry button |
+| `/api/dsh-side-assistant/bind` | host route | Tells the host which session the panel was opened from; the tools target it by default |
 
 **No shell, no file tools.** The assistant can only *talk*. It cannot touch your files — that is the point:
 letting it talk only means you never have to worry about it editing something behind your back.
@@ -54,6 +55,11 @@ A successful install returns `"application": "applied"`, and the Plugins page sh
 5. You say "follow up" → it calls `side_peek`, then reports the conclusion first, then what was verified,
    where it is stuck, and whether you need to decide anything.
 
+**The default target is the session you opened the panel from.** Clicking the header entry stores the
+"origin → assistant" pair in the browser and POSTs it to a small binding table on the host; `side_peek`
+and `side_deliver` use it whenever `session` is omitted. Pass `session` explicitly (id, id prefix, or a
+title fragment) to aim somewhere else.
+
 For risky actions (deploy, delete data, push code) it shows you the wording it is about to send and waits
 for your confirmation.
 
@@ -63,11 +69,11 @@ for your confirmation.
 // side_sessions — list sessions you can deliver to
 { "limit": 10 }
 
-// side_peek — read the recent progress of one session
-{ "sessionId": "session-xxxx", "limit": 30 }
+// side_peek — read the recent progress of one session (omitting session = the bound main session)
+{ "session": "session-xxxx, an id prefix, or a title fragment", "limit": 30 }
 
 // side_deliver — hand the requirement over (live sessions only)
-{ "sessionId": "session-xxxx", "message": "reorder the exported fields to …", "reason": "user approved" }
+{ "text": "reorder the exported fields to …", "note": "relayed by side assistant: …", "session": "optional" }
 ```
 
 ## Design decisions
@@ -97,6 +103,15 @@ for your confirmation.
   to the host default directory, which makes the panel show a workspace picker and moves the main column away.
   So the plugin looks up the workspace of the current session, calls
   `connectWorkspace(workspaceId, { agentPreset })`, then opens the tab with `openResource`.
+- **"Where it was opened from" travels over the plugin's own route.** Browser `sessions.create` accepts only
+  `{ workspaceId, cwd, sessionId, agentPreset }`, and the host `ApiSessionCreateRequest` reads only
+  `cwd`/`agentPreset`, so `parentSession` cannot be carried. The plugin registers
+  `POST /api/dsh-side-assistant/bind`; the panel pushes the pair on every open, and the tools look it up by
+  their own session id. The browser keeps a local copy so the binding survives a plugin reload.
+- **Tools survive a plugin reload.** Disabling and re-enabling the profile row disposes the old fiber context,
+  so a captured `ctx` turns inactive (`cannot get required service "sessionQuery" in inactive context`).
+  The plugin therefore captures the service objects at registration time, resolves them again through
+  `exec.agent.ctx` at call time, and rescans existing agents in `apply` to re-register their tools.
 
 ## Development
 
