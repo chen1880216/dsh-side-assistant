@@ -26,6 +26,10 @@ A Chinese-speaking helper that lives in a session's right sidebar. It does not d
 
 **Clear chat**: the button in the panel's top row turns into "Clear?" on the first click; the second click moves the panel to a fresh blank conversation and repoints the binding. The old conversation is not deleted — DSH has no session-delete API — so it stays in your session list.
 
+**List these Sessions / Hide these Sessions**: assistant sessions are kept out of the session list by default so history stays scannable; this button lists them, still without the finished dot.
+
+**Unarchive**: shown only while the panel's session is archived. An archived session is refused by the host, which looks like "sent, finished, but no reply"; one click lifts the archive.
+
 ## Design notes
 
 - The assistant is a real Session; the panel is only one view of it, so closing the panel keeps the conversation.
@@ -34,3 +38,4 @@ A Chinese-speaking helper that lives in a session's right sidebar. It does not d
 - The plugin imports no `@deepseek-ai/*` package: tool schemas are assembled locally.
 - The origin session travels over `POST /api/dsh-side-assistant/bind`, because `sessions.create` cannot carry it.
 - Tools re-resolve their services through `exec.agent.ctx`, so they keep working after the plugin reloads.
+

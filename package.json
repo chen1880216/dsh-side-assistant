@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-side-assistant",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "private": true,
   "description": "DSH（DeepSeek Harness）侧边助理：在右侧栏开一个中文助理会话，把需求整理清楚再转达给主会话，并跟进它的进展。",
   "type": "module",
@@ -63,5 +63,6 @@
     "side-assistant"
   ]
 }
+
 
 

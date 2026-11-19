@@ -63,10 +63,13 @@ title fragment) to aim somewhere else.
 For risky actions (deploy, delete data, push code) it shows you the wording it is about to send and waits
 for your confirmation.
 
-The panel's top row has a **Clear chat** button: the first click turns it into "Clear?", the second click
-moves the panel to a fresh blank conversation (same main session, same workspace, binding carried over).
-The previous conversation stays in your session list — DSH has no API to delete a session, so "clear"
-means "start a new pot of tea", not "smash the pot".
+The panel's top row has three buttons:
+
+| Button | What it does |
+|---|---|
+| **List these Sessions / Hide these Sessions** | Assistant Sessions are hidden from the session list by default; this lists them (still without the finished dot) |
+| **Clear chat** | First click asks "Clear?", second click moves the panel to a fresh blank conversation (same main session, same workspace, binding carried over). The previous conversation stays in your session list — DSH has no API to delete a session, so "clear" means "start a new pot of tea", not "smash the pot" |
+| **Unarchive** (only while the session is archived) | An archived session is refused by the host, which looks like "sent but no reply"; this lifts the archive |
 
 ## The three tools
 
@@ -117,14 +120,22 @@ means "start a new pot of tea", not "smash the pot".
   so a captured `ctx` turns inactive (`cannot get required service "sessionQuery" in inactive context`).
   The plugin therefore captures the service objects at registration time, resolves them again through
   `exec.agent.ctx` at call time, and rescans existing agents in `apply` to re-register their tools.
-- **No green dot on the assistant's Session.** The dot is DSH's `completionUnread` marker
-  for a Session that finished while nothing retained it as `mainView`. The first version
-  suppressed it by holding an extra `mainView` retention, which added a second candidate to
-  "which Session is current" lookups and pinned the main column to the panel Session, so other
-  history Sessions could not be opened. The dot is now hidden by row instead: the plugin injects
-  a stylesheet that hides `[data-state="done"]` only inside
-  `[data-row-key="session:<id>"]` rows of panel Sessions, leaving retain semantics untouched.
+- **One panel per main Session, and the panel follows the on-screen Session.** Panels are
+  remembered per origin Session in `localStorage`; opening the entry beside Session A reuses
+  A's panel or creates one, and never borrows another Session's conversation. A tab restored
+  from an older layout whose address still points at another Session's panel is retargeted to
+  the on-screen Session's panel and replaced in place.
+- **Assistant Sessions stay out of the Session list by default, and the switch is yours.** They are
+  an implementation detail of the right-hand panel, so a stylesheet hides their rows
+  (`[data-row-key="session:<id>"]`) and their finished dot. The panel toolbar carries
+  **List these Sessions / Hide these Sessions**, remembered in browser `localStorage`
+  (`dsh-side-assistant.show-rows.v1`); when listed, only the "no finished dot" rule stays.
   Cost: the selector rides on DOM attributes, so a DSH row-attribute change needs a follow-up.
+  The first version suppressed the dot by holding an extra `mainView` retention instead, which
+  pinned the main column to the panel Session and blocked opening other history Sessions; that is gone.
+- **An archived Session is called out.** DSH's `archived-session-gate` rejects every turn of an
+  archived Session, which looks like "message sent, run finished, no reply". The panel notices it is
+  archived and offers a one-click **Unarchive** instead of changing that state behind your back.
 
 ## Development
 
@@ -166,4 +177,7 @@ This open-source project is linked to and endorses the [LINUX DO](https://linux.
 ## License
 
 MIT
+
+
+
 
