@@ -14,7 +14,8 @@ and later comes back and tells you how far the main session got.
 
 - Every session header gets a 「侧边助理」 button;
 - Click it → a tab opens in the right sidebar with the assistant's own session, ready to chat;
-- The assistant joins the **workspace** the current session belongs to (no "pick a workspace" dialog);
+- The assistant session lives in its own `.dsh/side-assistant` workspace: no "pick a workspace" dialog,
+  and it never joins your workspace where "New Session" would mistake it for a blank draft;
 - Clicking again just brings the existing panel forward instead of creating new sessions.
 
 ![The assistant panel in the right sidebar](assets/sidebar-panel.png)
@@ -107,10 +108,16 @@ The panel's top row has three buttons:
   registers its own `sideassistant` resource protocol and tab type, occupies the shared
   `sidebar.chat.conversation` seat, and reuses the official conversation renderer through
   `renderFactorySlot('conversation.content', …)` instead of reimplementing the message stream.
-- **The assistant session is created inside the current workspace.** `sessions.create` without `cwd` falls back
-  to the host default directory, which makes the panel show a workspace picker and moves the main column away.
-  So the plugin looks up the workspace of the current session, calls
-  `connectWorkspace(workspaceId, { agentPreset })`, then opens the tab with `openResource`.
+- **The assistant session lives in the host's own workspace.** It used to be created inside the current
+  workspace with `connectWorkspace`, which collided with DSH's "new conversation" rule:
+  `createInWorkspace` reuses the **first blank Session** of that workspace
+  (`sessions.ids.find` in `dsh-client-ui-workspace`), and the New Session button names no preset, so the
+  preset filter short-circuits — the panel's not-yet-sent draft was adopted, together with whatever the user
+  had typed. The host now serves `POST /api/dsh-side-assistant/panel`:
+  `mkdir %USERPROFILE%\.dsh\side-assistant` → `workspaceRegistry.create(home)` →
+  `sessionController.create({ workspaceId, agentPreset })`. The panel Session never joins the user's
+  workspace, so it cannot be reused. Cost: the panel shows that workspace's name, and the sidebar gains an
+  extra workspace group.
 - **"Where it was opened from" travels over the plugin's own route.** Browser `sessions.create` accepts only
   `{ workspaceId, cwd, sessionId, agentPreset }`, and the host `ApiSessionCreateRequest` reads only
   `cwd`/`agentPreset`, so `parentSession` cannot be carried. The plugin registers

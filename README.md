@@ -14,7 +14,8 @@
 
 - 任意会话标题栏多一个「侧边助理」按钮；
 - 点一下 → 右侧栏打开一个标签页，里面就是助理会话，可以直接聊；
-- 助理继承当前会话所在的**工作区**，不会弹出"选工作区"；
+- 助理会话建在 `.dsh/side-assistant` 这个独立工作区里，不会弹出"选工作区"，
+  也不会挤进你的工作区、被「新建会话」误当成空白草稿接手；
 - 再次点击只是把已开的面板调出来，不会一直新建会话。
 
 ![右侧栏里的侧边助理面板](assets/sidebar-panel.png)
@@ -100,9 +101,13 @@
 - **右栏面板是"借壳"的。** DSH 的右栏是"一个会话一个停靠面"。本插件自己注册
   `sideassistant` 资源协议与标签类型，并占用公共座位 `sidebar.chat.conversation`，
   用 `renderFactorySlot('conversation.content', …)` 复用官方会话渲染器，不自己接管消息流。
-- **在会话所属工作区里建助理会话。** `sessions.create` 不带 `cwd` 会落到 host 默认目录，
-  面板就会显示"选工作区"并把主列切走；所以先用当前会话找到它所属的 workspace，
-  再 `connectWorkspace(workspaceId, { agentPreset })` 建会话，最后 `openResource` 打开标签。
+- **助理会话建在宿主自己的独立工作区里。** 一开始是在会话所属工作区里建（`connectWorkspace`），
+  结果撞上 DSH 的"新会话"规则：`createInWorkspace` 会复用工作区里**第一个空白会话**
+  （`dsh-client-ui-workspace` 的 `sessions.ids.find`），而"新会话"按钮调用时不带预设，
+  预设过滤整条失效——面板那块还没发过消息的草稿就被接走了，连用户打的字一起。
+  现在改成宿主侧 `POST /api/dsh-side-assistant/panel`：`mkdir %USERPROFILE%\.dsh\side-assistant` →
+  `workspaceRegistry.create(home)` → `sessionController.create({ workspaceId, agentPreset })`，
+  面板会话不在用户的工作区里，就不会被复用。代价：面板顶部显示该工作区名，左侧多一个工作区分组。
 - **"从哪打开的"靠自己的路由带过去。** 浏览器 `sessions.create` 只接受
   `{ workspaceId, cwd, sessionId, agentPreset }`，宿主 `ApiSessionCreateRequest` 也只读
   `cwd`/`agentPreset`，`parentSession` 送不过去。于是插件自己注册一条
